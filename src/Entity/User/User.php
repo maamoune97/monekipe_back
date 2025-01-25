@@ -11,6 +11,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\User\UserRepository;
 use App\State\User\UserPasswordHasher;
+use App\Trait\EntityDefaultTrait;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -34,13 +35,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    use EntityDefaultTrait;
 
     #[ORM\Column(length: 180)]
     #[Groups(['user:read', 'user:write', 'user:update'])]
+    #[Assert\Email]
     private ?string $email = null;
 
     /**
@@ -51,18 +50,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[Assert\NotBlank(groups: ['user:write'])]
     #[Groups(['user:write', 'user:update'])]
+    #[Assert\Regex(pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', message: 'Password must be at least 8 characters long and contain at least one digit, one upper case letter and one lower case letter')]
     private ?string $plainPassword = null;
 
     /**
-     * @var string The hashed password
+     * @var ?string The hashed password
      */
     #[ORM\Column]
     private ?string $password = null;
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
+    #[Groups(['user:read', 'user:write', 'user:update'])]
+    #[ORM\Column(length: 100)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 2, max: 100)]
+    private ?string $firstname = null;
+
+    #[Groups(['user:read', 'user:write', 'user:update'])]
+    #[ORM\Column(length: 100)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 2, max: 100)]
+    private ?string $lastname = null;
+
+    #[Groups(['user:write', 'user:read'])]
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?UserTypeReference $userTypeReference = null;
 
     public function getEmail(): ?string
     {
@@ -146,6 +158,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
+         $this->plainPassword = null;
+    }
+
+    public function getFirstname(): ?string
+    {
+        return $this->firstname;
+    }
+
+    public function setFirstname(string $firstname): static
+    {
+        $this->firstname = $firstname;
+
+        return $this;
+    }
+
+    public function getLastname(): ?string
+    {
+        return $this->lastname;
+    }
+
+    public function setLastname(string $lastname): static
+    {
+        $this->lastname = $lastname;
+
+        return $this;
+    }
+
+    public function getUserTypeReference(): ?UserTypeReference
+    {
+        return $this->userTypeReference;
+    }
+
+    public function setUserTypeReference(?UserTypeReference $userTypeReference): static
+    {
+        $this->userTypeReference = $userTypeReference;
+
+        return $this;
     }
 }
