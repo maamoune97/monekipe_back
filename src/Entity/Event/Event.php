@@ -3,34 +3,48 @@
 namespace App\Entity\Event;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Entity\User\User;
 use App\Repository\Event\EventRepository;
+use App\Trait\EntityDefaultTrait;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: EventRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Post(),
+        new Get(),
+        new Patch(),
+        new Delete(),
+        new Put(),
+    ],
+    normalizationContext: ['groups' => ['event:read', 'default:read']],
+    denormalizationContext: ['groups' => ['event:write', 'default:write']],
+)]
 class Event
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    use EntityDefaultTrait;
 
+    #[Groups(['event:read', 'event:write'])]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[Groups(['event:read', 'event:write'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\ManyToOne(inversedBy: 'events')]
+    #[Groups(['event:read', 'event:write'])]
+    #[ORM\ManyToOne(inversedBy: 'organizedEvents')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $organizer = null;
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
 
     public function getName(): ?string
     {
