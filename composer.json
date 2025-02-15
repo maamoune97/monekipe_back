@@ -33,7 +33,8 @@
         "symfony/twig-bundle": "7.2.*",
         "symfony/uid": "7.2.*",
         "symfony/validator": "7.2.*",
-        "symfony/yaml": "7.2.*"
+        "symfony/yaml": "7.2.*",
+        "vich/uploader-bundle": "*"
     },
     "config": {
         "allow-plugins": {

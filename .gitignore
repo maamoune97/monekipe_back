@@ -16,3 +16,7 @@
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+
+#User uploads
+/public/media/uploads/
+
