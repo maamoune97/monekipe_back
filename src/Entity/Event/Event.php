@@ -9,9 +9,12 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use App\Entity\Reservation\Reservation;
 use App\Entity\User\User;
 use App\Repository\Event\EventRepository;
 use App\Trait\EntityDefaultTrait;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -46,6 +49,21 @@ class Event
     #[ORM\JoinColumn(nullable: false)]
     private ?User $organizer = null;
 
+    #[Groups(['event:read', 'event:write'])]
+    #[ORM\Column]
+    private ?int $capacity = null;
+
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'event')]
+    private Collection $reservations;
+
+    public function __construct()
+    {
+        $this->reservations = new ArrayCollection();
+    }
+
     public function getName(): ?string
     {
         return $this->name;
@@ -78,6 +96,48 @@ class Event
     public function setOrganizer(?User $organizer): static
     {
         $this->organizer = $organizer;
+
+        return $this;
+    }
+
+    public function getCapacity(): ?int
+    {
+        return $this->capacity;
+    }
+
+    public function setCapacity(int $capacity): static
+    {
+        $this->capacity = $capacity;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setEvent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getEvent() === $this) {
+                $reservation->setEvent(null);
+            }
+        }
 
         return $this;
     }

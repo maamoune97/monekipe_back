@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Entity\Event\Event;
+use App\Entity\Reservation\Reservation;
 use App\Repository\User\UserRepository;
 use App\State\User\UserPasswordHasher;
 use App\Trait\EntityDefaultTrait;
@@ -62,19 +63,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[Groups(['user:read', 'user:write', 'user:update'])]
+    #[Groups(['user:read', 'user:write', 'user:update', 'event:read'])]
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 2, max: 100)]
     private ?string $firstname = null;
 
-    #[Groups(['user:read', 'user:write', 'user:update'])]
+    #[Groups(['user:read', 'user:write', 'user:update', 'event:read'])]
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 2, max: 100)]
     private ?string $lastname = null;
 
-    #[Groups(['user:write', 'user:read'])]
+    #[Groups(['user:write', 'user:read', 'event:read'])]
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private ?UserTypeReference $userTypeReference = null;
@@ -82,12 +83,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Event>
      */
+    #[Groups(['user:write', 'user:read'])]
     #[ORM\OneToMany(targetEntity: Event::class, mappedBy: 'organizer')]
     private Collection $organizedEvents;
+
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'customer')]
+    private Collection $reservations;
 
     public function __construct()
     {
         $this->organizedEvents = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
     }
 
     public function getEmail(): ?string
@@ -235,6 +244,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($event->getOrganizer() === $this) {
                 $event->setOrganizer(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setCustomer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getCustomer() === $this) {
+                $reservation->setCustomer(null);
             }
         }
 
