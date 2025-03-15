@@ -1,0 +1,24 @@
+services:
+  # Expose les services du module Core
+  App\Core\:
+    resource: '../../*'
+    exclude:
+      - '../../DependencyInjection/'
+      - '../../Entity/'
+      - '../../Kernel.php'
+
+  ApiPlatform\State\ProcessorInterface: '@api_platform.doctrine.orm.state.persist_processor'
+
+  App\Core\State\User\UserPasswordHasher:
+
+  App\Core\EventListener\PrePersistEntityListener:
+    tags:
+      - { name: 'doctrine.event_listener', event: 'prePersist' }
+
+  App\Core\EventListener\JWT\JWTSuccessListener:
+    tags:
+      - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccessResponse }
+
+  App\Core\EventListener\JWT\JWTCreatedListener:
+    tags:
+      - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJWTCreated }

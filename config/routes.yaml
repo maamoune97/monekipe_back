@@ -1,7 +1,4 @@
 api_login_check:
     path: /api/login_check
-controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
-    type: attribute
+core:
+    resource: '../src/Core/Resources/config/routes.yaml'

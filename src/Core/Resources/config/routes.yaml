@@ -1,0 +1,4 @@
+core_routes:
+  resource: ../../Controller/
+  type: attribute
+  prefix: /core
